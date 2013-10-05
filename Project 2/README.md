@@ -1,4 +1,5 @@
 Project #2 (due: 10/14)
+
 Study the position data in Figure 3.5. Perform linear, quadratic, and cubic least-
 squares fits and analyze the residual error. In each case, plot the polynomial and the data
 together in one graph and the residual error in another. Verify the discussion in the text
