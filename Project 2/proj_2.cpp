@@ -25,14 +25,25 @@ using namespace std;
   double sum_p_t_2 = 0;                         // sum of position
   double sum_p_t_3 = 0;                         // sum of position
 
-  vector<vector<double> > A;                     // matrix of coefficients
+  vector<vector<double> > A;                    // matrix of coefficients
   vector<double> b;                             // resulting vector
+  
+  int order;                                    // the order of the polynomial
+                                                // used in the least-squares fit
   
 // initialize data
 void initialize()
 {
-  position.resize(11);
-  t.resize(11);
+  int row, column;                              // counter variables
+  
+  A.resize(order+1);                            // need A to be a (order+1)
+                                                // square matrix
+  b.resize(order+1);                            // need b to be a (order+1)-term
+                                                // column vector
+  
+  position.resize(SIZE);                        // give position the appropriate
+                                                // size
+  t.resize(SIZE);                               // give t the appropriate size
 // initializing the positions
   position[0]  = 1.67203;
   position[1]  = 1.79792;
@@ -59,44 +70,96 @@ void initialize()
   t[9]  = 0.90;
   t[10] = 1.00;
   
+// fill A and b with zeroes
+  for (row = 0; row < SIZE; row++)
+    {b[row] = 0;
+     for (column = 0; column < SIZE; column++)
+      {A[row,column] = 0;}}
+  
 }
 
 // calculating the necessary sums
 void summation()
 {
-  int counter;                                  // a counter variable
-  for (counter = 0; counter < SIZE; counter++)
+  int row, column, counter;                     // counter variables
+  
+  // treat elements on a per-row basis
+  for (row = 0; row < SIZE; row++)
   {
-    sum_t     += t[counter];                    // summing t[i]
-    sum_t_2   += pow(t[counter],2);             // summing t[i]^2
-    sum_t_3   += pow(t[counter],3);             // summing t[i]^3
-    sum_t_4   += pow(t[counter],4);             // summing t[i]^4
-    sum_t_5   += pow(t[counter],5);             // summing t[i]^5
-    sum_t_6   += pow(t[counter],6);             // summing t[i]^6
+    // SETTING A
+    // treat elements on a per-column basis
+    for (column = 0; column < SIZE; column++)
+    {
+      // sum over the appropriate terms
+      for (counter = 0; counter < order+1; counter++)
+      {
+        A[row,column] += pow(t[counter],column+row);
+/*
+ Algorithm Explanation
+ ---------------------
+ Since the elements in our coefficient matrix follow a pattern qualitatively
+ described by multiplying each successive row by another factor of t, the
+ above algorithm handles this dynamically by noting that the index of t
+ at each particular location is simply the sum of the row and column of that
+ position (with the indexing necessarily starting at zero).  Thus, we may then
+ simply vary the type of least-squares fit by altering the global parameter
+ order, which affects both this subroutine and intiailize().
+ */
+      }
+    }
     
-    sum_p     += position[counter];             // summing p[i]
-    sum_p_t   += position[counter]
-                 * t[counter];                  // summing p[i] * t[i]
-    sum_p_t_2 += position[counter]
-                 * pow(t[counter],2);           // summing p[i] * t[i]^2
-    sum_p_t_3 += position[counter]
-                 * pow(t[counter],3);           // summing p[i] * t[i]^3
+    for (counter = 0; counter < order+1; counter++)
+    {
+      b[row] += position[counter] * pow(t[counter],row);
+/*
+ Algorithm Explanation
+ ---------------------
+ By the same method explained above, the sums comprising the resultant vector
+ are determined by sums of the position data multiplied by increasing powers of
+ t, with those powers being equivalent to, as before, the row+column indices,
+ again beginning indexing at zero.  Since this is a column matrix, the column
+ index is always zero, leaving the power of t being equal to the row index.
+ */
+    }
   }
+      
+      
+      
+//     sum_t     += t[counter];                    // summing t[i]
+//     sum_t_2   += pow(t[counter],2);             // summing t[i]^2
+//     sum_t_3   += pow(t[counter],3);             // summing t[i]^3
+//     sum_t_4   += pow(t[counter],4);             // summing t[i]^4
+//     sum_t_5   += pow(t[counter],5);             // summing t[i]^5
+//     sum_t_6   += pow(t[counter],6);             // summing t[i]^6
+//     
+//     sum_p     += position[counter];             // summing p[i]
+//     sum_p_t   += position[counter]
+//                  * t[counter];                  // summing p[i] * t[i]
+//     sum_p_t_2 += position[counter]
+//                  * pow(t[counter],2);           // summing p[i] * t[i]^2
+//     sum_p_t_3 += position[counter]
+//                  * pow(t[counter],3);           // summing p[i] * t[i]^3
 }
 
 // find the linear fit
 void lin_fit()
 {
-  A.resize(2);
-  b.resize(2);
+  order = 1;                                    // use a first order polynomial
+  initialize();                                 // set everything back to normal
+                                                // and appropriately resize the
+                                                // matrices
+  summation();                                  // perform the necessary summations
   
-  A[0,0] = SIZE;
-  A[0,1] = sum_t;
-  A[1,0] = sum_t;
-  A[1,1] = sum_t_2;
-  
-  b[0,0] = sum_p;
-  b[1,0] = sum_p_t;
+//   A.resize(2);
+//   b.resize(2);
+//   
+//   A[0,0] = SIZE;
+//   A[0,1] = sum_t;
+//   A[1,0] = sum_t;
+//   A[1,1] = sum_t_2;
+//   
+//   b[0,0] = sum_p;
+//   b[1,0] = sum_p_t;
 }
 
 // find the quadratic fit
