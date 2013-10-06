@@ -12,18 +12,6 @@ using namespace std;
 
   vector<double> position;                      // the positions from Fig 3.5
   vector<double> t;                             // the times from Fig 3.5
-  
-  double sum_t   = 0;                           // sum of time
-  double sum_t_2 = 0;                           // sum of time^2
-  double sum_t_3 = 0;                           // sum of time^3
-  double sum_t_4 = 0;                           // sum of time^4
-  double sum_t_5 = 0;                           // sum of time^5
-  double sum_t_6 = 0;                           // sum of time^6
-
-  double sum_p     = 0;                         // sum of position
-  double sum_p_t   = 0;                         // sum of position
-  double sum_p_t_2 = 0;                         // sum of position
-  double sum_p_t_3 = 0;                         // sum of position
 
   vector<vector<double> > A;                    // matrix of coefficients
   vector<double> b;                             // resulting vector
@@ -72,9 +60,9 @@ void initialize()
   
 // fill A and b with zeroes
   for (row = 0; row < SIZE; row++)
-    {b[row] = 0;
+    {b[row] = 0.0;
      for (column = 0; column < SIZE; column++)
-      {A[row,column] = 0;}}
+      {A[row][column] = 0.0;}}
   
 }
 
@@ -93,7 +81,7 @@ void summation()
       // sum over the appropriate terms
       for (counter = 0; counter < order+1; counter++)
       {
-        A[row,column] += pow(t[counter],column+row);
+        A[row][column] += pow(t[counter],column+row);
 /*
  Algorithm Explanation
  ---------------------
@@ -108,6 +96,8 @@ void summation()
       }
     }
     
+    // SETTING B
+    // sum over the appropriate terms
     for (counter = 0; counter < order+1; counter++)
     {
       b[row] += position[counter] * pow(t[counter],row);
@@ -122,23 +112,6 @@ void summation()
  */
     }
   }
-      
-      
-      
-//     sum_t     += t[counter];                    // summing t[i]
-//     sum_t_2   += pow(t[counter],2);             // summing t[i]^2
-//     sum_t_3   += pow(t[counter],3);             // summing t[i]^3
-//     sum_t_4   += pow(t[counter],4);             // summing t[i]^4
-//     sum_t_5   += pow(t[counter],5);             // summing t[i]^5
-//     sum_t_6   += pow(t[counter],6);             // summing t[i]^6
-//     
-//     sum_p     += position[counter];             // summing p[i]
-//     sum_p_t   += position[counter]
-//                  * t[counter];                  // summing p[i] * t[i]
-//     sum_p_t_2 += position[counter]
-//                  * pow(t[counter],2);           // summing p[i] * t[i]^2
-//     sum_p_t_3 += position[counter]
-//                  * pow(t[counter],3);           // summing p[i] * t[i]^3
 }
 
 // find the linear fit
@@ -149,17 +122,6 @@ void lin_fit()
                                                 // and appropriately resize the
                                                 // matrices
   summation();                                  // perform the necessary summations
-  
-//   A.resize(2);
-//   b.resize(2);
-//   
-//   A[0,0] = SIZE;
-//   A[0,1] = sum_t;
-//   A[1,0] = sum_t;
-//   A[1,1] = sum_t_2;
-//   
-//   b[0,0] = sum_p;
-//   b[1,0] = sum_p_t;
 }
 
 // find the quadratic fit
@@ -177,8 +139,7 @@ void cubic_fit()
 // the main algorithm
 int main()
 {
-  initialize();
-  summation();
+  lin_fit();
   
   return 0;
 }
