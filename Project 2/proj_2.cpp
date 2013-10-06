@@ -4,9 +4,8 @@
                         // issues with dynamic memory allocation
 #define SIZE 11
 // future: include header files for:
-//      > LU decomposition
+//      > LU decomposition of A
 //      > solving sysem of equations using L and U matrices
-//
 
 using namespace std;
 
@@ -14,8 +13,10 @@ using namespace std;
   vector<double> t;                             // the times from Fig 3.5
 
   vector<vector<double> > A;                    // matrix of coefficients
+  vector<vector<double> > L;                    // decomposed lower matrix
+  vector<vector<double> > U;                    // decomposed upper matrix
   vector<double> b;                             // resulting vector
-  
+
   int order;                                    // the order of the polynomial
                                                 // used in the least-squares fit
 
@@ -29,6 +30,26 @@ void print_A()
      {cout << "A(" << row <<","<< column<< ") = "<<A[row][column] << endl;}}
 }
 
+// output the contents of L to the screen; mostly for debugging
+void print_L()
+{
+  int row, column;
+
+  for (row = 0; row < order+1; row++)
+  {for (column = 0; column < order+1; column++)
+     {cout << "L(" << row <<","<< column<< ") = "<<L[row][column] << endl;}}
+}
+
+// output the contents of U to the screen; mostly for debugging
+void print_U()
+{
+  int row, column;
+
+  for (row = 0; row < order+1; row++)
+  {for (column = 0; column < order+1; column++)
+     {cout << "U(" << row <<","<< column<< ") = "<<U[row][column] << endl;}}
+}
+
 // output the contents of b to the screen; mostly for debugging
 void print_b()
 {
@@ -38,24 +59,24 @@ void print_b()
   {  cout << "b(" << row <<") = "<<b[row] << endl;}
 }
 
-
 // initialize data
 void initialize()
 {
   int row, column, counter;                     // counter variables
-  
-  // resizing and initializing A and b
-  A.resize(order+1);                            // need A to be a (order+1)
-                                                // square matrix, so fill A with
-                                                // (order+1) vectors
 
-  for (counter=0; counter < order+1; counter++) // since A is a vector of
-  {A[counter].resize(order+1,0.0);}             // vectors, need to resize each
-                                                // element individually
+  // resizing and initializing A, L, U, and b
+  A.resize(order+1);                            // need A, L, and U to be
+  L.resize(order+1);                            // (order+1) square matrices, so
+  U.resize(order+1);                            // fill with (order+1) vectors
+
+  for (counter=0; counter < order+1; counter++) // since A, L, and U are vectors
+  {A[counter].resize(order+1,0.0);              // of vectors, need to resize
+   L[counter].resize(order+1,0.0);              // each element individually
+   U[counter].resize(order+1,0.0);}
 
   b.resize(order+1,0.0);                        // need b to be a (order+1)-term
                                                 // column vector
-  
+
   position.resize(SIZE);                        // give position the appropriate
                                                 // size
   t.resize(SIZE);                               // give t the appropriate size
@@ -91,7 +112,7 @@ void initialize()
 void summation()
 {
   int row, column, counter;                     // counter variables
-  
+
   // treat elements on a per-row basis
   for (row = 0; row < order+1; row++)
   {
@@ -116,7 +137,7 @@ void summation()
  */
       }
     }
-    
+
     // SETTING B
     // sum over the appropriate terms
     for (counter = 0; counter < order+1; counter++)
@@ -135,53 +156,29 @@ void summation()
   }
 }
 
-// use the least squares fits
+// perform the least squares fits
 void least_squares_fit(int x)
 {
-  order = x;                                    // use a first order polynomial
+  order = x;                                    // set the order being used in the fit
   initialize();                                 // set everything back to normal
                                                 // and appropriately resize the
                                                 // matrices
   summation();                                  // perform the necessary summations
 
   print_A();
+  print_L();
+  print_U();
   print_b();
 }
-
-// // find the quadratic fit
-// void quad_fit()
-// {
-//   order = 2;                                    // use a first order polynomial
-//   initialize();                                 // set everything back to normal
-//                                                 // and appropriately resize the
-//                                                 // matrices
-//   summation();                                  // perform the necessary summations
-// 
-//   print_A();
-//   print_b();
-// }
-// 
-// // find the cubic fit
-// void cubic_fit()
-// {
-//   order = 3;                                    // use a first order polynomial
-//   initialize();                                 // set everything back to normal
-//                                                 // and appropriately resize the
-//                                                 // matrices
-//   summation();                                  // perform the necessary summations
-// 
-//   print_A();
-//   print_b();
-// }
 
 // the main algorithm
 int main()
 {
   int counter;                                  // a counter variable
-  
+
   // do the linear (order = 1), quadratic (order = 2), and cubic (order = 3) fit
   for (counter=1; counter<4; counter++)
   {least_squares_fit(counter);}
-  
+
   return 0;
 }
