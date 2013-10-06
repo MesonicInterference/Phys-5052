@@ -18,7 +18,27 @@ using namespace std;
   
   int order;                                    // the order of the polynomial
                                                 // used in the least-squares fit
-  
+
+// output the contents of A to the screen; mostly for debugging
+void print_A()
+{
+  int row, column;
+
+  for (row = 0; row < order+1; row++)
+  {for (column = 0; column < order+1; column++)
+     {cout << "A(" << row <<","<< column<< ") = "<<A[row][column] << endl;}}
+}
+
+// output the contents of b to the screen; mostly for debugging
+void print_b()
+{
+  int row;
+
+  for (row = 0; row < order+1; row++)
+  {  cout << "b(" << row <<") = "<<b[row] << endl;}
+}
+
+
 // initialize data
 void initialize()
 {
@@ -65,14 +85,6 @@ void initialize()
   t[8]  = 0.80;
   t[9]  = 0.90;
   t[10] = 1.00;
-
-  for (row = 0; row < order+1; row++)
-  {  cout << "b(" << row <<") = "<<b[row] << endl;
-//     cout << "set b\n";
-     for (column = 0; column < order+1; column++)
-     {cout << "A(" << row <<","<< column<< ") = "<<A[row][column] << endl;
-      }}
-  
 }
 
 // calculating the necessary sums
@@ -123,36 +135,53 @@ void summation()
   }
 }
 
-// find the linear fit
-void lin_fit()
+// use the least squares fits
+void least_squares_fit(int x)
 {
-  order = 1;                                    // use a first order polynomial
-  cout << "set order" << endl;
+  order = x;                                    // use a first order polynomial
   initialize();                                 // set everything back to normal
                                                 // and appropriately resize the
                                                 // matrices
-  cout << "called initialize()" << endl;
   summation();                                  // perform the necessary summations
-  
-  cout << "called summation()" << endl;
+
+  print_A();
+  print_b();
 }
 
-// find the quadratic fit
-void quad_fit()
-{
-  
-}
-
-// find the cubic fit
-void cubic_fit()
-{
-  
-}
+// // find the quadratic fit
+// void quad_fit()
+// {
+//   order = 2;                                    // use a first order polynomial
+//   initialize();                                 // set everything back to normal
+//                                                 // and appropriately resize the
+//                                                 // matrices
+//   summation();                                  // perform the necessary summations
+// 
+//   print_A();
+//   print_b();
+// }
+// 
+// // find the cubic fit
+// void cubic_fit()
+// {
+//   order = 3;                                    // use a first order polynomial
+//   initialize();                                 // set everything back to normal
+//                                                 // and appropriately resize the
+//                                                 // matrices
+//   summation();                                  // perform the necessary summations
+// 
+//   print_A();
+//   print_b();
+// }
 
 // the main algorithm
 int main()
 {
-  lin_fit();
+  int counter;                                  // a counter variable
+  
+  // do the linear (order = 1), quadratic (order = 2), and cubic (order = 3) fit
+  for (counter=1; counter<4; counter++)
+  {least_squares_fit(counter);}
   
   return 0;
 }
