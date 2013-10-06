@@ -22,16 +22,24 @@ using namespace std;
 // initialize data
 void initialize()
 {
-  int row, column;                              // counter variables
+  int row, column, counter;                     // counter variables
   
+  // resizing and initializing A and b
   A.resize(order+1);                            // need A to be a (order+1)
-                                                // square matrix
-  b.resize(order+1);                            // need b to be a (order+1)-term
+                                                // square matrix, so fill A with
+                                                // (order+1) vectors
+
+  for (counter=0; counter < order+1; counter++)    // since A is a vector of
+  {A[counter].resize(order+1,0.0);}             // vectors, need to resize each
+                                                // element individually
+
+  b.resize(order+1,0.0);                        // need b to be a (order+1)-term
                                                 // column vector
   
   position.resize(SIZE);                        // give position the appropriate
                                                 // size
   t.resize(SIZE);                               // give t the appropriate size
+
 // initializing the positions
   position[0]  = 1.67203;
   position[1]  = 1.79792;
@@ -57,12 +65,13 @@ void initialize()
   t[8]  = 0.80;
   t[9]  = 0.90;
   t[10] = 1.00;
-  
-// fill A and b with zeroes
-  for (row = 0; row < SIZE; row++)
-    {b[row] = 0.0;
-     for (column = 0; column < SIZE; column++)
-      {A[row][column] = 0.0;}}
+
+  for (row = 0; row < order+1; row++)
+  {  cout << "b(" << row <<") = "<<b[row] << endl;
+//     cout << "set b\n";
+     for (column = 0; column < order+1; column++)
+     {cout << "A(" << row <<","<< column<< ") = "<<A[row][column] << endl;
+      }}
   
 }
 
@@ -118,10 +127,14 @@ void summation()
 void lin_fit()
 {
   order = 1;                                    // use a first order polynomial
+  cout << "set order" << endl;
   initialize();                                 // set everything back to normal
                                                 // and appropriately resize the
                                                 // matrices
+  cout << "called initialize()" << endl;
   summation();                                  // perform the necessary summations
+  
+  cout << "called summation()" << endl;
 }
 
 // find the quadratic fit
