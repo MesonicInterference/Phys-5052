@@ -29,7 +29,7 @@ void initialize()
                                                 // square matrix, so fill A with
                                                 // (order+1) vectors
 
-  for (counter=0; counter < order+1; counter++)    // since A is a vector of
+  for (counter=0; counter < order+1; counter++) // since A is a vector of
   {A[counter].resize(order+1,0.0);}             // vectors, need to resize each
                                                 // element individually
 
@@ -81,14 +81,14 @@ void summation()
   int row, column, counter;                     // counter variables
   
   // treat elements on a per-row basis
-  for (row = 0; row < SIZE; row++)
+  for (row = 0; row < order+1; row++)
   {
     // SETTING A
     // treat elements on a per-column basis
-    for (column = 0; column < SIZE; column++)
+    for (column = 0; column < order+1; column++)
     {
       // sum over the appropriate terms
-      for (counter = 0; counter < order+1; counter++)
+      for (counter = 0; counter < SIZE; counter++)
       {
         A[row][column] += pow(t[counter],column+row);
 /*
