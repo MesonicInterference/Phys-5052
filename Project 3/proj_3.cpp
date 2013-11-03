@@ -1,7 +1,7 @@
 /*
-  Problems 5.2 and 5.5
-  Kyle Thomsen
+  Project 3
   Phys 5052
+  A. Kafle, J. Primus, K. Thomsen
  */
 
 #include <iostream>
