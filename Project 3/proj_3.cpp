@@ -12,10 +12,24 @@
 
 using namespace std;
 
-typedef double F(double,double);
+typedef double F(double,double);        // defining a type allowing the program
+                                        // to more closely parallel the book's
+                                        // notation, namely renaming
+                                        // v'(t,v) = f(t,v)
 
-vector<vector<double> > results;
-vector< vector<double> > err;
+vector<vector<double> > results;        // vector of vectors containing the
+                                        // results of the calculations
+                                        // row 0: t values
+                                        // row 1: modified Euler results
+                                        // row 2: RK4 results
+
+vector< vector<double> > err;           // vector of vectors containing the
+                                        // actual errors in the calculations
+                                        // row 0: t values
+                                        // row 1: modified Euler errors
+                                        // row 2: RK4 errors
+
+  double h;                             // step size
 
 // constant declarations
   double g = 9.80665;                   // standard Earth gravity in m * s^(-2)
@@ -37,8 +51,7 @@ vector< vector<double> > err;
 //   double a0 = 0;
 //   double low = 0, high = 3.14159;
 
-  double h;                             // step size
-
+// calculating v(t) via the modified Euler method
 void mod_euler(F f, double h)
 {
     double v = v0;
@@ -52,6 +65,7 @@ void mod_euler(F f, double h)
     }
 }
 
+// calculating v(t) via RK4
 void rk4(F f, double h)
 {
     double v = v0;
@@ -68,29 +82,31 @@ void rk4(F f, double h)
       counter++;}
 }
 
-double y_prime(double t, double v)
+// the DE expressed as an equation for the first derivative
+double v_prime(double t, double v)
 {
-     return g - k / m * pow(v,2);
-  
+  return g - k / m * pow(v,2);
+
 // test case 1
-//  return pow(t,2) + 1;
-  
+//   return pow(t,2) + 1;
+
 // test case 2
 //   return -sin(t);
-  
 }
 
-double y_actual(double t)
+// the analytic solution to the DE
+double v_actual(double t)
 {
-     return sqrt((m*g)/k) * tanh(sqrt((k*g)/m)*t);
+  return sqrt((m*g)/k) * tanh(sqrt((k*g)/m)*t);
   
 // test case 1
-//  return tan(t);
+//   return tan(t);
   
 // test case 2
 //   return cos(t);
 }
 
+// print results to the terminal
 void print_results()
 {
   int counter, counter2;
@@ -107,6 +123,7 @@ void print_results()
    cout << "------------------------------\n";
 }
 
+// calculate errors
 void errors()
 {
   err.resize(3);
@@ -118,12 +135,13 @@ void errors()
       for (int counter2 = 1; counter2 <= 2; counter2++)
         {
           if (counter == 0) {err[counter2][counter] = 0;} else {
-          err[counter2][counter] = fabs(y_actual(results[0][counter])
+          err[counter2][counter] = fabs(v_actual(results[0][counter])
                 - results[counter2][counter]);}
         }
     }
 }
 
+// print errors to the terminal
 void print_errors()
 {
   int counter, counter2;
@@ -140,13 +158,16 @@ void print_errors()
    cout << "------------------------------\n";
 }
 
+// create output files for making graphs with gnuplot
 void print_gnuplot()
 {
-  // setting up velocity output files
+// setting up velocity output files
   fstream f_modeuler_vel;
   f_modeuler_vel.open("mod_euler_vel.dat", ios::out);
   fstream f_rk4_vel;
   f_rk4_vel.open("rk4_vel.dat", ios::out);
+
+// setting up velocity error output files
   fstream f_modeuler_vel_err;
   f_modeuler_vel_err.open("mod_euler_vel_err.dat", ios::out);
   fstream f_rk4_vel_err;
@@ -158,31 +179,30 @@ void print_gnuplot()
   fstream f_rk4_pos;
   f_rk4_pos.open("rk4_pos.dat", ios::out);
 
-  int counter, counter2;
-  
-  //outputting modified Euler results
+  int counter, counter2;                // counter variables
+
+// outputting modified Euler results to files
   for (counter = low; counter < high/h+1; counter++)
     {
       f_modeuler_vel << results[0][counter] << "" << 
       "," <<" " << results[1][counter] << endl;
-      f_modeuler_pos << results[0][counter] << "" << 
-      "," <<" " << results[1][counter]*results[0][counter] << endl;
       f_modeuler_vel_err << results[0][counter] << "" << 
       "," <<" " << err[1][counter] << endl;
+      f_modeuler_pos << results[0][counter] << "" << 
+      "," <<" " << results[1][counter]*results[0][counter] << endl;
     }
-  cout << "mod euler file output\n";
-    
+
+// outputting RK4 results to files
   for (counter = low; counter < high/h+1; counter++)
     {
       f_rk4_vel << results[0][counter] << "" <<  ","
       <<" " << results[2][counter] << endl;
-      f_rk4_pos << results[0][counter] << "" <<  ","
-      <<" " << results[2][counter]*results[0][counter] << endl;
       f_rk4_vel_err << results[0][counter] << "" << 
       "," <<" " << err[2][counter] << endl;
+      f_rk4_pos << results[0][counter] << "" <<  ","
+      <<" " << results[2][counter]*results[0][counter] << endl;
     }
-    cout << "RK4 file output\n";
-  
+
   f_modeuler_vel.close();
   f_rk4_vel.close();
   f_modeuler_vel_err.close();
@@ -195,11 +215,8 @@ void computations()
 {
     for (int counter = 0; counter <= 2; counter++)
       {results[counter].resize((high-low)/h+1);}
-      cout << "resized vectors\n";
-    mod_euler(y_prime, h);
-    cout << "mod euler\n";
-    rk4(y_prime, h);
-    cout << "RK4\n";
+    mod_euler(v_prime, h);
+    rk4(v_prime, h);
     errors();
     print_gnuplot();
 }
