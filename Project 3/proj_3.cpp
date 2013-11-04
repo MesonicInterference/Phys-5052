@@ -26,8 +26,8 @@ vector<vector<double> > vel_results;    // vector of vectors containing the
 vector<vector<double> > pos_results;    // vector of vectors containing the
                                         // results of the integration
                                         // row 0: t values
-                                        // row 1: modified Euler results
-                                        // row 2: RK4 results
+                                        // row 1: uses modified Euler results
+                                        // row 2: uses RK4 results
 
 vector< vector<double> > vel_err;       // vector of vectors containing the
                                         // actual errors in the calculations
@@ -38,8 +38,8 @@ vector< vector<double> > vel_err;       // vector of vectors containing the
 vector< vector<double> > pos_err;       // vector of vectors containing the
                                         // actual errors in the integration
                                         // row 0: t values
-                                        // row 1: modified Euler errors
-                                        // row 2: RK4 errors
+                                        // row 1: errors using modified Euler results
+                                        // row 2: errors using RK4 results
 
   double h;                             // step size
   int case_num;                         // case number for easily running
@@ -74,8 +74,11 @@ void mod_euler(F f, double h)
     double counter = 0;
     for (double t = 0; t < (high-low); t += h)
     {
+// setting first row
       vel_results[0][counter] = t;
+// setting result first so that the term indexed 0 will be equal to v0
       vel_results[1][counter] = v;
+// using midpoint function evaluation
       v += h * f(t+h/2, v+h/2);
       counter++;
     }
@@ -87,13 +90,16 @@ void rk4(F f, double h)
     double v = v0;
     double counter = 0;
     double f0, f1, f2, f3;
-    for (double t = low; t < (high-low); t += h)
+    for (double t = 0; t < (high-low); t += h)
     {
+// intermediate function evaluations
       f0 = h * f(t, v);
       f1 = h * f(t + h / 2, v + f0 / 2);
       f2 = h * f(t + h / 2, v + f1 / 2);
       f3 = h * f(t + h, v + f2);
+// setting result first so that the term indexed 0 will be equal to v0
       vel_results[2][counter] = v;
+// combining the intermediate function evaluations
       v += (f0 + 2 * f1 + 2 * f2 + f3) / 6;
       counter++;}
 }
@@ -101,30 +107,39 @@ void rk4(F f, double h)
 // the DE expressed as an equation for the first derivative
 double v_prime(double t, double v)
 {
+// DE for base case (the assigned problem)
   if(case_num == 0) {return g - k / m * pow(v,2);}
 
+// DE for case 1
   if(case_num == 1) {return pow(t,2) + 1;}
 
+// DE for case 2
   if(case_num == 2) {return -sin(t);}
 }
 
 // the analytic solution to the DE
 double v_actual(double t)
 {
+// actual velocity for base case (the assigned problem)
   if(case_num == 0) {return sqrt((m*g)/k) * tanh(sqrt((k*g)/m)*t);}
 
+// actual velocity for case 1
   if(case_num == 1) {return tan(t);}
 
+// actual velocity for case 2
   if(case_num == 2) {return cos(t);}
 }
 
 // the analytic solution to the integration
 double x_actual(double t)
 {
+// actual position for base case (the assigned problem)
   if(case_num == 0) {return (sqrt((g*m)/k)*log(cosh(sqrt((g*k)/m)*t)))/sqrt((g*k)/m);}
 
+// actual position for case 1
   if(case_num == 1) {return -log(cos(t));}
 
+// actual position for case 2
   if(case_num == 2) {return sin(t);}
 }
 
@@ -161,10 +176,61 @@ void simpson_rk4()
                                            vel_results[2][low+(counter+1)],
                                            vel_results[2][low+(counter+2)]);}
       else
+// add results to the next 
         {pos_results[2][counter] = pos_results[2][counter-1] +
                                    simpson(vel_results[2][low+counter],
                                           vel_results[2][low+(counter+1)],
                                           vel_results[2][low+(counter+2)]);}}
+}
+
+// calculate errors in v(t)
+void vel_errors()
+{
+// resizing error vector
+  for(int counter = 0; counter < 3; counter++)
+    {vel_err[counter].resize(10/h+1);}
+    
+  for (int counter = 0; counter < 10/h+1; counter++)
+    { vel_err[0][counter] = vel_results[0][counter];
+      for (int counter2 = 1; counter2 <= 2; counter2++)
+        {
+          if (counter == 0)
+          {
+// no error on first term
+            vel_err[counter2][counter] = 0;}
+          else
+          {
+// taking the absolute value of the difference between the two
+          vel_err[counter2][counter] = fabs((v_actual(vel_results[0][counter])
+                - vel_results[counter2][counter])/v_actual(vel_results[0][counter]));}
+        }
+    }
+}
+
+// calculate errors in x(t)
+void pos_errors()
+{
+// resizing error vector
+  for(int counter = 0; counter < 3; counter++)
+    {pos_err[counter].resize(10/h+1);}
+    
+  for (int counter = 0; counter < 10/h+1; counter++)
+    {
+// set first terms equal to independent variable values
+      pos_err[0][counter] = pos_results[0][counter];
+      for (int counter2 = 1; counter2 <= 2; counter2++)
+        {
+          if (counter == 0)
+          {
+// no error on first term
+            pos_err[counter2][counter] = 0;}
+          else
+          {
+// taking the absolute value of the difference between the two
+          pos_err[counter2][counter] = fabs((x_actual(pos_results[0][counter])
+                - pos_results[counter2][counter])/x_actual(pos_results[0][counter]));}
+        }
+    }
 }
 
 // print results to the terminal
@@ -184,51 +250,17 @@ void print_results()
    cout << "------------------------------\n";
 }
 
-// calculate errors in v(t)
-void vel_errors()
-{
-  for(int counter = 0; counter < 3; counter++)
-    {vel_err[counter].resize(10/h+1);}
-    
-  for (int counter = 0; counter < 10/h+1; counter++)
-    { vel_err[0][counter] = vel_results[0][counter];
-      for (int counter2 = 1; counter2 <= 2; counter2++)
-        {
-          if (counter == 0) {vel_err[counter2][counter] = 0;} else {
-          vel_err[counter2][counter] = fabs(v_actual(vel_results[0][counter])
-                - vel_results[counter2][counter]);}
-        }
-    }
-}
-
-// calculate errors in v(t)
-void pos_errors()
-{
-  for(int counter = 0; counter < 3; counter++)
-    {pos_err[counter].resize(10/h+1);}
-    
-  for (int counter = 0; counter < 10/h+1; counter++)
-    { pos_err[0][counter] = pos_results[0][counter];
-      for (int counter2 = 1; counter2 <= 2; counter2++)
-        {
-          if (counter == 0) {pos_err[counter2][counter] = 0;} else {
-          pos_err[counter2][counter] = fabs(x_actual(pos_results[0][counter])
-                - pos_results[counter2][counter]);}
-        }
-    }
-}
-
 // print errors to the terminal
 void print_errors()
 {
   int counter, counter2;
     cout << "errors for h = " << setprecision(2) << h << endl;
-    cout << "    x    \t|\t  Euler \t|\t modEuler\t|\t impEuler\t|\t   RK4    \t|\n";
+    cout << "    x    \t|\t modEuler\t|\t   RK4    \t|\n";
   for (counter = 0; counter < 10/h+1; counter++)
     {  for (counter2 = 0; counter2 < 3; counter2++)
       {
         cout << fixed << setprecision(8) <<
-        vel_err[counter2][counter] << "\t" <<  "|" <<"\t";
+        pos_err[counter2][counter] << "\t" <<  "|" <<"\t";
       }
       cout << endl;
     }
@@ -265,10 +297,9 @@ void print_gnuplot()
   f_modeuler_pos_err.open("mod_euler_pos_err.dat", ios::out);
   fstream f_rk4_pos_err;
   f_rk4_pos_err.open("rk4_pos_err.dat", ios::out);
-  
+
   int counter, counter2;                // counter variables
 
-  
   for (counter = low; counter < high/h+1; counter++)
   {
       f_vel << vel_results[0][counter] << "" << 
@@ -276,7 +307,7 @@ void print_gnuplot()
       f_pos << pos_results[0][counter] << "" << 
       "," <<" " << x_actual(pos_results[0][counter]) << endl;
   }
-  
+
 // outputting modified Euler results to files
   for (counter = low; counter < high/h; counter++)
     {
@@ -303,6 +334,7 @@ void print_gnuplot()
       "," <<" " << pos_err[2][counter] << endl;
     }
 
+// close files
   f_modeuler_vel.close();
   f_rk4_vel.close();
   f_modeuler_vel_err.close();
@@ -320,47 +352,59 @@ void choice()
   cout << "case 0: v'(t,v) = g - k / m * v(t)^2\n";
   cout << "case 1: v'(t,v) = v(t)^2 + 1\n";
   cout << "case 2: v'(t,v) = -sin(t)\n";
+// get user choice for case number
   cin >> case_num;
+// require user choice be 0, 1, or 2
   while((case_num != 0) && (case_num != 1) && (case_num != 2))
     {cin >> case_num;}
-    
+// constraints for base case (the assigned problem)
   if(case_num == 0)
-    { v0 = 0;                        // initial velocity in m * s^(-1)
-      a0 = g - k / m * pow(v0,2);    // initial acceleration in m * s^(-2)
-      low = 0;
-      high = 10;}           // lower and upper limits in s
+    { v0 = 0;                           // initial velocity in m * s^(-1)
+      a0 = g - k / m * pow(v0,2);       // initial acceleration in m * s^(-2)
+      low = 0;                          // lower limit in s
+      high = 10;}                       // upper limit in s
+// constraints for test case 1
   if(case_num == 1)
-    { v0 = 0;
-      a0 = 0;
-      low = 0;
-      high = 1;}
+    { v0 = 0;                           // initial velocity in m * s^(-1)
+      a0 = 0;                           // initial acceleration in m * s^(-2)
+      low = 0;                          // lower limit in s
+      high = 1;}                        // upper limit in s
+// constraints for test case 2
   if(case_num == 2)
-    { v0 = 1;
-      a0 = 0;
-      low = 0;
-      high = 2.0e0 * acos(0);}
+    { v0 = 1;                           // initial velocity in m * s^(-1)
+      a0 = 0;                           // initial acceleration in m * s^(-2)
+      low = 0;                          // lower limit in s
+      high = 2.0e0 * acos(0);}          // upper limit in s
 }
 
-// calling the functions necessary to do the necessary calculations
+// calling the functions necessary to do the calculations
 void computations()
 {
+// resize the results vectors based on the step size
     for (int counter = 0; counter <= 2; counter++)
       {vel_results[counter].resize(((high-low)/h+1),0.0);
        pos_results[counter].resize(((high-low)/h+1),0.0);}
+// modified Euler calculation
     mod_euler(v_prime, h);
+// RK4 calculation
     rk4(v_prime, h);
+// find errors in velocities
     vel_errors();
+// Simpson integration using modified Euler velocities
     simpson_euler();
+// Simpson integration using RK4 velocities
     simpson_rk4();
+// find errors in positions
     pos_errors();
+// output gnuplot files for streamlined plotting of results
     print_gnuplot();
 }
-
-
 
 int main()
 {
   choice();
+// resize vectors to allow for independent variable values and two different
+// methods of solving the given DE
   vel_results.resize(3);
   pos_results.resize(3);
   vel_err.resize(3);
