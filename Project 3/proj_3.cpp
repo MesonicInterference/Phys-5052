@@ -44,6 +44,7 @@ vector< vector<double> > pos_err;       // vector of vectors containing the
   double h;                             // step size
   int case_num;                         // case number for easily running
                                         // test cases
+  int num_iterations;                   // number of iterations
 
 // constant declarations
   double g = 9.80665;                   // standard Earth gravity in m * s^(-2)
@@ -153,7 +154,7 @@ double simpson(double f0, double f1, double f2)
 // Simpson's rule for integrating v(t) to get the position
 void simpson_euler()
 {
-  for(int counter = 0; counter < (high-low)/h-2; counter++)
+  for(int counter = 0; counter < num_iterations-2; counter++)
     { pos_results[0][counter] = vel_results[0][counter];
       if(counter == 0)
         {pos_results[1][counter] = simpson(vel_results[1][low+counter],
@@ -169,7 +170,7 @@ void simpson_euler()
 // Simpson's rule for integrating v(t) to get the position
 void simpson_rk4()
 {
-  for(int counter = 0; counter < (high-low)/h-2; counter++)
+  for(int counter = 0; counter < num_iterations-2; counter++)
     {
       if(counter == 0)
         {pos_results[2][counter] = simpson(vel_results[2][low+counter],
@@ -186,11 +187,7 @@ void simpson_rk4()
 // calculate errors in v(t)
 void vel_errors()
 {
-// resizing error vector
-  for(int counter = 0; counter < 3; counter++)
-    {vel_err[counter].resize(10/h+1);}
-    
-  for (int counter = 0; counter < 10/h+1; counter++)
+  for (int counter = 0; counter < num_iterations+1; counter++)
     { vel_err[0][counter] = vel_results[0][counter];
       for (int counter2 = 1; counter2 <= 2; counter2++)
         {
@@ -210,11 +207,8 @@ void vel_errors()
 // calculate errors in x(t)
 void pos_errors()
 {
-// resizing error vector
-  for(int counter = 0; counter < 3; counter++)
-    {pos_err[counter].resize(10/h+1);}
-    
-  for (int counter = 0; counter < 10/h+1; counter++)
+// only calculate error for the points which have been calulated
+  for (int counter = 0; counter < num_iterations+1-3; counter++)
     {
 // set first terms equal to independent variable values
       pos_err[0][counter] = pos_results[0][counter];
@@ -231,40 +225,6 @@ void pos_errors()
                 - pos_results[counter2][counter])/x_actual(pos_results[0][counter]));}
         }
     }
-}
-
-// print results to the terminal
-void print_results()
-{
-  int counter, counter2;
-    cout << "result tables for h = " << setprecision(2) << h << endl;
-    cout << "    x    \t|\t modEuler\t|\t   RK4    \t|\n";
-  for (counter = 0; counter < 10/h+1; counter++)
-    {  for (counter2 = 0; counter2 <= 2; counter2++)
-      {
-        cout << fixed << setprecision(8) <<
-        vel_results[counter2][counter] << "\t" <<  "|" <<"\t";
-      }
-      cout << endl;
-    }
-   cout << "------------------------------\n";
-}
-
-// print errors to the terminal
-void print_errors()
-{
-  int counter, counter2;
-    cout << "errors for h = " << setprecision(2) << h << endl;
-    cout << "    x    \t|\t modEuler\t|\t   RK4    \t|\n";
-  for (counter = 0; counter < 10/h+1; counter++)
-    {  for (counter2 = 0; counter2 < 3; counter2++)
-      {
-        cout << fixed << setprecision(8) <<
-        pos_err[counter2][counter] << "\t" <<  "|" <<"\t";
-      }
-      cout << endl;
-    }
-   cout << "------------------------------\n";
 }
 
 // create output files for making graphs with gnuplot
@@ -298,9 +258,10 @@ void print_gnuplot()
   fstream f_rk4_pos_err;
   f_rk4_pos_err.open("rk4_pos_err.dat", ios::out);
 
+  
   int counter, counter2;                // counter variables
 
-  for (counter = low; counter < high/h+1; counter++)
+  for (counter = low; counter < num_iterations; counter++)
   {
       f_vel << vel_results[0][counter] << "" << 
       "," <<" " << v_actual(vel_results[0][counter]) << endl;
@@ -309,7 +270,8 @@ void print_gnuplot()
   }
 
 // outputting modified Euler results to files
-  for (counter = low; counter < high/h; counter++)
+//   for (counter = low; counter < high/h; counter++)
+  for (counter = low; counter < num_iterations; counter++)
     {
       f_modeuler_vel << vel_results[0][counter] << "" << 
       "," <<" " << vel_results[1][counter] << endl;
@@ -322,7 +284,8 @@ void print_gnuplot()
     }
 
 // outputting RK4 results to files
-  for (counter = low; counter < high/h; counter++)
+//   for (counter = low; counter < high/h; counter++)
+  for (counter = low; counter < num_iterations; counter++)
     {
       f_rk4_vel << vel_results[0][counter] << "" <<  ","
       <<" " << vel_results[2][counter] << endl;
@@ -375,6 +338,9 @@ void choice()
       a0 = 0;                           // initial acceleration in m * s^(-2)
       low = 0;                          // lower limit in s
       high = 2.0e0 * acos(0);}          // upper limit in s
+      
+   num_iterations = static_cast<int>(abs((high-low)/h));
+  cout << "num_iterations = " << num_iterations << endl;
 }
 
 // calling the functions necessary to do the calculations
@@ -382,8 +348,11 @@ void computations()
 {
 // resize the results vectors based on the step size
     for (int counter = 0; counter <= 2; counter++)
-      {vel_results[counter].resize(((high-low)/h+1),0.0);
-       pos_results[counter].resize(((high-low)/h+1),0.0);}
+      {vel_results[counter].resize((num_iterations+1),0.0);
+       pos_results[counter].resize((num_iterations+1),0.0);
+// resizing error vectors based on the step size
+       vel_err[counter].resize((num_iterations+1),0.0);
+       pos_err[counter].resize((num_iterations+1),0.0);}
 // modified Euler calculation
     mod_euler(v_prime, h);
 // RK4 calculation
@@ -398,10 +367,13 @@ void computations()
     pos_errors();
 // output gnuplot files for streamlined plotting of results
     print_gnuplot();
+//     print_errors();
 }
 
 int main()
 {
+  h = .05;
+  cout << "h = " << h << endl;
   choice();
 // resize vectors to allow for independent variable values and two different
 // methods of solving the given DE
@@ -409,6 +381,5 @@ int main()
   pos_results.resize(3);
   vel_err.resize(3);
   pos_err.resize(3);
-  h = .05;
   computations();
 }
